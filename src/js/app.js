@@ -45,7 +45,7 @@ export default function App(props) {
       message: ""
     },
   })
-  const [darkMode, setDarkMode] = React.useState(window.localStorage.getItem('theme') === 'dark')
+  const [darkMode, setDarkMode] = React.useState(window.localStorage.getItem('theme') != 'light')
 
   let theme = getTheme({
     paletteType: darkMode ? 'dark' : 'light',
