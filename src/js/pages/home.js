@@ -36,6 +36,10 @@ function Home(props) {
   const [articleDate, setArticleDate] = React.useState(null)
 
   useEffect(() => {
+    fetchArticle()
+  }, [])
+
+  const fetchArticle = () => {
     articleApi.randomArticle().then((r) => {
       hydrateBodyParagraphs(r.data.fields.bodyText)
       setArticle(r.data)
@@ -47,7 +51,7 @@ function Home(props) {
         props.snack("error", e.response.data.message)
       }
     })
-  }, [])
+  }
 
   useEffect(() => {
     if (article != null) {
@@ -101,7 +105,7 @@ function Home(props) {
   }
 
   const guessDate = () => {
-    let guessedDate = moment(date ,'YYYY-MM-DD', true)
+    let guessedDate = moment(date.trim() ,'YYYY-MM-DD', true)
     if (!guessedDate.isValid()) {
       props.snack("error", "Please provide a valid date in the format YYYY-MM-DD")
       return
@@ -115,6 +119,16 @@ function Home(props) {
 
     setArticleDate(aDate.format("YYYY-MM-DD"))
     setDateDifference(`${Math.abs(years)} years, ${Math.abs(months)} months, ${Math.abs(days)} days`)
+  }
+
+  const nextArticle = () => {
+    setPageLoading(true)
+    setDate("")
+    setArticle(null)
+    setBodyParagraphs([])
+    setDateDifference(null)
+    setArticleDate(null)
+    fetchArticle()
   }
 
   return !pageLoading ? (
@@ -131,6 +145,7 @@ function Home(props) {
               </Typography>
             )
           }
+          {!articleDate && !dateDifference && (
           <div className={classes.dateContainer}>
             <TextField  label="YYYY-MM-DD"
                         variant="outlined"
@@ -148,7 +163,8 @@ function Home(props) {
             <Button variant="contained" color="primary" style={{marginLeft: "5px", height: "40px"}} onClick={guessDate}>
               Guess
             </Button>
-          </div>
+          </div>)
+          }
           {
             articleDate && (
               <Typography variant="subtitle1" gutterBottom style={{marginTop: "15px"}}>
@@ -164,6 +180,15 @@ function Home(props) {
               <Typography variant="subtitle1" gutterBottom>
                 {dateDifference} away
               </Typography>
+            )
+          }
+          {
+            articleDate && dateDifference && (
+              <div style={{textAlign: "end"}}>
+                <Button variant="contained" color="primary" onClick={nextArticle}>
+                  Next Article
+                </Button>
+              </div>
             )
           }
         </Paper>
