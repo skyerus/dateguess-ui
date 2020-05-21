@@ -1,6 +1,8 @@
 import React, {useEffect} from 'react'
-import { Paper, Grid, Backdrop, CircularProgress, Typography, TextField } from '@material-ui/core'
+import { Paper, Grid, Backdrop, CircularProgress, Typography, TextField, InputAdornment, Button, Link } from '@material-ui/core'
+import DateIcon from '@material-ui/icons/DateRange'
 import { makeStyles } from '@material-ui/core/styles'
+import moment from 'moment'
 
 import articleApi from '../api/article'
 
@@ -17,6 +19,11 @@ const styles = makeStyles({
   bodyText: {
     marginTop: "13px",
   },
+  dateContainer: {
+    marginTop: "20px",
+    display: "flex",
+    alignItems: "center",
+  }
 })
 
 function Home(props) {
@@ -25,6 +32,8 @@ function Home(props) {
   const [bodyParagraphs, setBodyParagraphs] = React.useState([])
   const [pageLoading, setPageLoading] = React.useState(true)
   const [date, setDate] = React.useState("")
+  const [dateDifference, setDateDifference] = React.useState(null)
+  const [articleDate, setArticleDate] = React.useState(null)
 
   useEffect(() => {
     articleApi.randomArticle().then((r) => {
@@ -57,10 +66,24 @@ function Home(props) {
     let para = ""
     for (let i=0;i<splitText.length;i++) {
       if (i <= randInt) {
+        if (splitText[i] == "") {
+          if (i == splitText.length - 1) {
+            break
+          }
+          para += "."
+          continue
+        }
         para += splitText[i] + "."
       } else {
+        if (splitText[i] == "") {
+          if (i == splitText.length - 1) {
+            break
+          }
+          para += "."
+          continue
+        }
         paras.push(para)
-        para = ""
+        para = splitText[i] + "."
         randInt = i + getRandomInt(3, 6)
       }
     }
@@ -77,6 +100,23 @@ function Home(props) {
     return Math.floor(Math.random() * (max - min + 1)) + min
   }
 
+  const guessDate = () => {
+    let guessedDate = moment(date ,'YYYY-MM-DD', true)
+    if (!guessedDate.isValid()) {
+      props.snack("error", "Please provide a valid date in the format YYYY-MM-DD")
+      return
+    }
+    let aDate = moment(article.webPublicationDate)
+    let years = aDate.diff(guessedDate, 'year')
+    guessedDate.add(years, 'years')
+    let months = aDate.diff(guessedDate, 'months')
+    guessedDate.add(months, 'months')
+    var days = aDate.diff(guessedDate, 'days')
+
+    setArticleDate(aDate.format("YYYY-MM-DD"))
+    setDateDifference(`${Math.abs(years)} years, ${Math.abs(months)} months, ${Math.abs(days)} days`)
+  }
+
   return !pageLoading ? (
     <Grid container>
       <Grid item className={classes.root} xs={11} md={8} lg={6}>
@@ -91,14 +131,41 @@ function Home(props) {
               </Typography>
             )
           }
-          <div>
-            <TextField  label="Date"
+          <div className={classes.dateContainer}>
+            <TextField  label="YYYY-MM-DD"
                         variant="outlined"
                         size="small"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <DateIcon />
+                            </InputAdornment>
+                          ),
+                        }}
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
             />
+            <Button variant="contained" color="primary" style={{marginLeft: "5px", height: "40px"}} onClick={guessDate}>
+              Guess
+            </Button>
           </div>
+          {
+            articleDate && (
+              <Typography variant="subtitle1" gutterBottom style={{marginTop: "15px"}}>
+                <Link href={article.webUrl} variant="subtitle1">
+                  Article
+                </Link>
+                &nbsp;published: {articleDate}
+              </Typography>
+            )
+          }
+          {
+            dateDifference && (
+              <Typography variant="subtitle1" gutterBottom>
+                {dateDifference} away
+              </Typography>
+            )
+          }
         </Paper>
       </Grid>
     </Grid>
