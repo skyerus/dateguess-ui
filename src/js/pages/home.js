@@ -145,7 +145,6 @@ function Home(props) {
               </Typography>
             )
           }
-          {!articleDate && !dateDifference && (
           <div className={classes.dateContainer}>
             <TextField  label="YYYY-MM-DD"
                         variant="outlined"
@@ -160,11 +159,12 @@ function Home(props) {
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
             />
-            <Button variant="contained" color="primary" style={{marginLeft: "5px", height: "40px"}} onClick={guessDate}>
-              Guess
-            </Button>
-          </div>)
-          }
+            {!articleDate && !dateDifference && (
+              <Button variant="contained" color="primary" style={{marginLeft: "5px", height: "40px"}} onClick={guessDate}>
+                Guess
+              </Button>
+            )}
+          </div>
           {
             articleDate && (
               <Typography variant="subtitle1" gutterBottom style={{marginTop: "15px"}}>
@@ -178,7 +178,7 @@ function Home(props) {
           {
             dateDifference && (
               <Typography variant="subtitle1" gutterBottom>
-                {dateDifference} away
+                {dateDifference} difference
               </Typography>
             )
           }
