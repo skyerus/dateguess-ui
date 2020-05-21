@@ -37,6 +37,7 @@ function Home(props) {
 
   useEffect(() => {
     fetchArticle()
+    document.title = "Guess the date"
   }, [])
 
   const fetchArticle = () => {

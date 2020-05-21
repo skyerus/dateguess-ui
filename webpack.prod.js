@@ -13,7 +13,8 @@ module.exports = merge(common, {
     new HtmlWebpackPlugin({
       template: "./src/index.html",
       filename: "./index.html",
-      minify: true
+      minify: true,
+      favicon: "./src/public/calendar.png",
     }),
     new webpack.DefinePlugin({
       'process.env': {
