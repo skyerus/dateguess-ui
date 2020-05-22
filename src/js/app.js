@@ -8,6 +8,7 @@ import MuiAlert from '@material-ui/lab/Alert'
 import '../scss/main.scss'
 import CssBaseline from '@material-ui/core/CssBaseline'
 
+import Article from './pages/article'
 import Home from './pages/home'
 
 
@@ -83,6 +84,9 @@ export default function App(props) {
     return <Switch>
       <Route exact path={"/"}>
         <Home {...commonProps}/>
+      </Route>
+      <Route path="/articles">
+        <Article {...commonProps}/>
       </Route>
     </Switch>
   }
