@@ -11,6 +11,7 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import Article from './pages/article'
 import Home from './pages/home'
 import Event from './pages/event'
+import Order from './pages/order'
 
 
 function getTheme(theme) {
@@ -88,6 +89,9 @@ export default function App(props) {
       </Route>
       <Route path="/articles">
         <Article {...commonProps}/>
+      </Route>
+      <Route path="/historical_events/order">
+        <Order {...commonProps}/>
       </Route>
       <Route path="/historical_events">
         <Event {...commonProps}/>

@@ -6,6 +6,12 @@ const api = {
       method: "get",
       url: "/api/random_historical_event",
     })
+  },
+  randomEvents: (qty) => {
+    return axios({
+      method: "get",
+      url: `/api/random_historical_events?qty=${qty}`
+    })
   }
 }
 

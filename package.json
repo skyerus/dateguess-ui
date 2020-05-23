@@ -44,6 +44,7 @@
     "axios": "^0.19.2",
     "moment": "^2.24.0",
     "react": "^16.13.0",
+    "react-beautiful-dnd": "^13.0.0",
     "react-dom": "^16.13.0",
     "react-router-dom": "^5.1.2"
   }
