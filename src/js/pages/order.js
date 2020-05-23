@@ -26,7 +26,7 @@ const styles = makeStyles({
     marginTop: "20px",
     display: "flex",
     alignItems: "center",
-  }
+  },
 })
 
 const reorder = (list, startIndex, endIndex) => {
@@ -37,24 +37,39 @@ const reorder = (list, startIndex, endIndex) => {
   return result
 }
 
-const EventCard = (value) => (
-    <Typography variant="h6">{value}</Typography>
+const EventCard = (value, correctPosition) => (
+    <div style={{backgroundColor: correctPosition ? "#4caf50": "#3b3a3a", padding: "10px 10px 10px 10px", boxShadow: "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)", borderRadius: "2px",}}>
+      <Typography variant="h6">
+        {value}
+      </Typography>
+    </div>
 )
 
 const getItemStyle = (isDragging, draggableStyle) => ({
   userSelect: "none",
-  padding: "10px 10px 10px 10px",
   margin: "0 0 10px 0",
-  background: isDragging ? "rgba(59, 58, 58, 0.8)" : "#3b3a3a",
-  boxShadow: "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)",
-  borderRadius: "2px",
   ...draggableStyle
 })
+
+const move = (source, destination, droppableSource, droppableDestination) => {
+  const sourceClone = Array.from(source)
+  const destClone = Array.from(destination)
+  const [removed] = sourceClone.splice(droppableSource.index, 1)
+
+  destClone.splice(droppableDestination.index, 0, removed)
+
+  return {
+    "source": sourceClone,
+    "destination": destClone,
+  }
+}
 
 function Order(props) {
   const classes = styles()
   const [events, setEvents] = React.useState([])
+  const [orderedEvents, setOrderedEvents] = React.useState(null)
   const [pageLoading, setPageLoading] = React.useState(true)
+  const [gameCompleted, setGameCompleted] = React.useState(false)
 
   useEffect(() => {
     fetchEvents()
@@ -62,22 +77,42 @@ function Order(props) {
   }, [])
 
   const onDragEnd = (result) => {
-    if (!result.destination) {
+    const { source, destination } = result
+
+    // dropped outside the list
+    if (!destination) {
       return
     }
-
-    const es = reorder(
-      events,
-      result.source.index,
-      result.destination.index
-    )
-
+    let es = [...events]
+    if (source.droppableId === destination.droppableId) {
+      let eventsIndex = parseInt(source.droppableId[source.droppableId.length-1], 10)
+      const items = reorder(
+        events[eventsIndex],
+        source.index,
+        destination.index
+      )
+      
+      es[eventsIndex] = items
+    } else {
+      let sourceEventsIndex = parseInt(source.droppableId[source.droppableId.length-1], 10)
+      let destEventsIndex = parseInt(destination.droppableId[destination.droppableId.length-1], 10)
+      const result = move(
+        events[sourceEventsIndex],
+        events[destEventsIndex],
+        source,
+        destination
+      )
+      es[sourceEventsIndex] = result.source
+      es[destEventsIndex] = result.destination
+    }
     setEvents(es)
   }
 
   const fetchEvents = () => {
-    eventApi.randomEvents(5).then((r) => {
-      setEvents(r.data)
+    eventApi.randomEvents(5, true).then((r) => {
+      let eventResults = [...r.data]
+      setOrderedEvents([...eventResults])
+      setEvents([shuffleEvents(eventResults)])
     }).catch((e) => {
       if (e.response.status == 401) {
         props.loggedIn(false)
@@ -86,6 +121,20 @@ function Order(props) {
         props.snack("error", e.response.data.message)
       }
     })
+  }
+
+  const shuffleEvents = (array) => {
+    let currentIndex = array.length, temporaryValue, randomIndex
+
+    while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex)
+      currentIndex -= 1
+
+      temporaryValue = array[currentIndex]
+      array[currentIndex] = array[randomIndex]
+      array[randomIndex] = temporaryValue
+    }
+    return array
   }
 
   useEffect(() => {
@@ -98,6 +147,48 @@ function Order(props) {
     setPageLoading(true)
     setEvents([])
     fetchEvents()
+    setGameCompleted(false)
+  }
+
+  const guess = () => {
+    let orderedIndex = 0
+    let newEvents = []
+    let correctAnswers = 0
+    for (let i=0;i<events.length;i++) {
+      if (Array.isArray(events[i])) {
+        for (let j=0;j<events[i].length;j++) {
+          if (events[i][j].id === orderedEvents[orderedIndex].id) {
+            newEvents.push(orderedEvents[orderedIndex])
+            correctAnswers++
+          } else {
+            if (!Array.isArray(newEvents[newEvents.length-1])) {
+              newEvents.push([events[i][j]])
+            } else {
+              newEvents[newEvents.length-1][newEvents[newEvents.length-1].length] = events[i][j]
+            }
+          }
+          orderedIndex++
+        }
+      } else {
+        if (events[i].id === orderedEvents[orderedIndex].id) {
+          newEvents.push(orderedEvents[orderedIndex])
+          correctAnswers++
+        } else {
+          if (!Array.isArray(newEvents[newEvents.length-1])) {
+            newEvents.push([events[i]])
+          } else {
+            newEvents[newEvents.length-1][newEvents[newEvents.length-1].length] = events[i]
+          }
+        }
+        orderedIndex++
+      }
+    }
+    setEvents(newEvents)
+    if (correctAnswers != orderedEvents.length) {
+      props.snack("info", `${correctAnswers}/${orderedEvents.length} events are correctly positioned`)
+    } else {
+      setGameCompleted(true)
+    }
   }
 
   return !pageLoading ? (
@@ -113,42 +204,54 @@ function Order(props) {
             </div>
             <Typography style={{textAlign: "center"}} variant="subtitle1">0000</Typography>
             <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="droppable">
-                {(provided, snapshot) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {events.map((event, index) => (
-                      <Draggable key={event.id.toString()} draggableId={event.id.toString()} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={getItemStyle(
-                              snapshot.isDragging,
-                              provided.draggableProps.style
+              {
+                events.map((list, index) => (
+                  Array.isArray(list) ? <Droppable droppableId={`droppable${index}`} key={`droppable${index}`}>
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        style={{marginTop: "10px"}}
+                      >
+                        {list.map((event, index) => (
+                          <Draggable key={event.id.toString()} draggableId={event.id.toString()} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                style={getItemStyle(
+                                  snapshot.isDragging,
+                                  provided.draggableProps.style
+                                )}
+                              >
+                                {EventCard(event.fact, false)}
+                              </div>
                             )}
-                          >
-                            {EventCard(event.fact)}
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable> : <div key={`card_${list.id}`} style={{marginTop: "10px"}}>{EventCard(list.fact, true)}</div>
+                ))
+              }
             </DragDropContext>
             <Typography style={{textAlign: "center"}} variant="subtitle1">{new Date().getFullYear()}</Typography>
             <div style={{textAlign: "center"}}>
               <ArrowDownwardIcon />
             </div>
             <div style={{textAlign: "end"}}>
-              <Button variant="contained" color="primary">
-                Guess
-              </Button>
+              {
+              !gameCompleted ? (
+                <Button variant="contained" color="primary" onClick={guess}>
+                  Guess
+                </Button>) : (
+                <Button variant="contained" color="primary" onClick={nextEvents}>
+                  Play Again
+                </Button>
+              )
+              }
             </div>
           </Paper>
         </Grid>

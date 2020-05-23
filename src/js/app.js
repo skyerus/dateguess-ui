@@ -47,6 +47,10 @@ export default function App(props) {
       active: false,
       message: ""
     },
+    info: {
+      active: false,
+      message: ""
+    }
   })
   const [darkMode, setDarkMode] = React.useState(window.localStorage.getItem('theme') != 'light')
 
@@ -110,6 +114,11 @@ export default function App(props) {
         <Snackbar open={state.error.active} autoHideDuration={3000} onClose={(e, reason) => handleClose(e, reason, "error")}>
           <Alert severity="error" onClose={(e, reason) => handleClose(e, reason, "error")}>
             {state.error.message}
+          </Alert>
+        </Snackbar>
+        <Snackbar open={state.info.active} autoHideDuration={3000} onClose={(e, reason) => handleClose(e, reason, "info")}>
+          <Alert severity="info" onClose={(e, reason) => handleClose(e, reason, "info")}>
+            {state.info.message}
           </Alert>
         </Snackbar>
         {router()}

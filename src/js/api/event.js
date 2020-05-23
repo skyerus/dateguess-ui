@@ -7,10 +7,10 @@ const api = {
       url: "/api/random_historical_event",
     })
   },
-  randomEvents: (qty) => {
+  randomEvents: (qty, order) => {
     return axios({
       method: "get",
-      url: `/api/random_historical_events?qty=${qty}`
+      url: `/api/random_historical_events?qty=${qty}&order=${order}`
     })
   }
 }
