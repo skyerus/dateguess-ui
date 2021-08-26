@@ -185,7 +185,7 @@ function Order(props) {
     }
     setEvents(newEvents)
     if (correctAnswers != orderedEvents.length) {
-      props.snack("info", `${correctAnswers}/${orderedEvents.length} events are correctly positioned`)
+      props.snack("info", `${correctAnswers}/${orderedEvents.length} events are correctly ordered`)
     } else {
       setGameCompleted(true)
     }

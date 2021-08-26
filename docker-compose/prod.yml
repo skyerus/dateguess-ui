@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  dateguess-ui:
+    build:
+      context: ..
+      dockerfile: docker/dateguess-ui/Dockerfile
+      target: prod
+    networks:
+      - dateguess
+    ports:
+      - 3000:80
+
+networks:
+  dateguess:
+    name: dateguess

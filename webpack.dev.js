@@ -11,7 +11,7 @@ module.exports = merge(common, {
     noInfo: true,
     disableHostCheck: true,
     host: '0.0.0.0',
-    port: 80,
+    port: 3000,
   },
   module: {
     rules: [
